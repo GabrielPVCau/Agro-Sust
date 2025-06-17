@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel de Gerenciamento - Fazenda Boa Esperança</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        /* Estilos customizados para complementar o Tailwind */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6; /* bg-gray-100 */
+        }
+        .main-container {
+            display: flex;
+            height: calc(100vh - 80px); /* Altura total menos o cabeçalho */
+        }
+        .sidebar {
+            width: 300px;
+            min-width: 300px;
+        }
+        .content {
+            flex-grow: 1;
+        }
+        /* Scrollbar customizada */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+        /* Estado ativo para itens da barra lateral */
+        .talhao-item.active {
+            background-color: #e0f2fe; /* Azul bem claro */
+            border-right: 4px solid #0ea5e9; /* Azul céu */
+            font-weight: 600;
+        }
+        .map-placeholder {
+            background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-48 0c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7z' fill='%239C92AC' fill-opacity='0.2' fill-rule='evenodd'/%3E%3C/svg%3E");
+            min-height: 400px;
+        }
+    </style>
+</head>
+<body class="text-gray-800">
+
+    <header class="bg-white shadow-md p-4 flex justify-between items-center h-[80px]">
+        <div>
+            <h1 class="text-2xl font-bold text-green-800">Fazenda Boa Esperança</h1>
+            <p class="text-sm text-gray-500">Painel de Gerenciamento de Precisão</p>
+        </div>
+        <div class="text-right">
+            <p id="current-date" class="font-medium"></p>
+            <p id="last-updated" class="text-sm text-gray-500">Última atualização: --:--:--</p>
+        </div>
+    </header>
+
+    <div class="main-container">
+
+        <aside class="sidebar bg-white border-r border-gray-200 p-4 overflow-y-auto">
+            <h2 class="text-lg font-semibold mb-4 text-gray-700">Setores da Propriedade</h2>
+            <div id="talhao-list" class="space-y-2">
+                </div>
+        </aside>
+
+        <main id="main-content" class="content p-6 overflow-y-auto">
+            <div id="initial-view" class="h-full flex flex-col justify-center items-center text-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-map-pinned text-gray-400 mb-4"><path d="M18 8c0 4.5-6 9-6 9s-6-4.5-6-9a6 6 0 0 1 12 0Z"/><circle cx="12" cy="8" r="2"/><path d="M8.835 14H5a1 1 0 0 0-1 1v4a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1v-1.165"/><path d="M15.165 14H19a1 1 0 0 1 1 1v4a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1v-1.165"/></svg>
+                <h2 class="text-2xl font-semibold text-gray-600">Selecione um Setor</h2>
+                <p class="text-gray-500 mt-2">Escolha um setor na barra lateral para visualizar os dados e ações recomendadas.</p>
+            </div>
+
+            <div id="detailed-view" class="hidden">
+                <div class="flex justify-between items-start mb-6">
+                    <div>
+                        <h2 id="talhao-title" class="text-3xl font-bold text-gray-800"></h2>
+                        <p id="talhao-cultura" class="text-lg text-gray-600"></p>
+                    </div>
+                    <div id="talhao-status" class="px-4 py-2 rounded-full text-white font-semibold text-sm flex items-center gap-2">
+                        <span id="talhao-status-text"></span>
+                    </div>
+                </div>
+
+                <div class="border-b border-gray-200 mb-6">
+                    <nav class="flex space-x-6" aria-label="Tabs">
+                        <button onclick="changeTab('overview')" id="tab-overview" class="tab-button font-semibold py-3 border-b-2">Visão Geral</button>
+                        <button onclick="changeTab('maps')" id="tab-maps" class="tab-button font-semibold py-3 border-b-2">Mapas</button>
+                        <button onclick="changeTab('sensors')" id="tab-sensors" class="tab-button font-semibold py-3 border-b-2">Sensores</button>
+                    </nav>
+                </div>
+
+                <div id="tab-content">
+                    <div id="content-overview" class="hidden">
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                            <div class="bg-white p-4 rounded-lg shadow flex items-center gap-4">
+                                <i data-lucide="droplets" class="text-blue-500 w-8 h-8"></i>
+                                <div>
+                                    <p class="text-sm text-gray-500">Umidade do Solo</p>
+                                    <p id="metric-umidade" class="text-xl font-bold"></p>
+                                </div>
+                            </div>
+                            <div class="bg-white p-4 rounded-lg shadow flex items-center gap-4">
+                                <i data-lucide="thermometer" class="text-red-500 w-8 h-8"></i>
+                                <div>
+                                    <p class="text-sm text-gray-500">Temperatura Solo</p>
+                                    <p id="metric-temperatura" class="text-xl font-bold"></p>
+                                </div>
+                            </div>
+                            <div class="bg-white p-4 rounded-lg shadow flex items-center gap-4">
+                                <i data-lucide="leaf" class="text-green-500 w-8 h-8"></i>
+                                <div>
+                                    <p class="text-sm text-gray-500">Índice Nutrientes</p>
+                                    <p id="metric-nutrientes" class="text-xl font-bold"></p>
+                                </div>
+                            </div>
+                             <div class="bg-white p-4 rounded-lg shadow flex items-center gap-4">
+                                <i data-lucide="cloud-sun" class="text-yellow-500 w-8 h-8"></i>
+                                <div>
+                                    <p class="text-sm text-gray-500">Previsão (24h)</p>
+                                    <p id="metric-previsao" class="text-xl font-bold"></p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white p-6 rounded-lg shadow">
+                            <h3 class="text-xl font-semibold mb-4">Ações Recomendadas</h3>
+                            <div id="acoes-list" class="space-y-3">
+                                </div>
+                        </div>
+                    </div>
+
+                    <div id="content-maps" class="hidden">
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                            <div class="lg:col-span-2 bg-white p-4 rounded-lg shadow">
+                                <h3 id="map-title" class="text-xl font-semibold mb-4"></h3>
+                                <div class="w-full bg-gray-200 rounded-lg map-placeholder flex items-center justify-center">
+                                    <img id="map-image" src="" alt="Mapa do Talhão" class="rounded-lg object-cover w-full h-full">
+                                </div>
+                            </div>
+                            <div class="bg-white p-4 rounded-lg shadow">
+                                <h3 class="text-xl font-semibold mb-2">Camadas de Dados</h3>
+                                <p class="text-sm text-gray-500 mb-4">Selecione uma camada para visualizar.</p>
+                                <div id="map-buttons" class="space-y-2">
+                                    <button onclick="changeMap('satelite')" class="map-button w-full text-left p-3 rounded-md transition-colors flex items-center gap-3"><i data-lucide="satellite" class="w-5 h-5"></i> Satélite (Planet)</button>
+                                    <button onclick="changeMap('ndvi')" class="map-button w-full text-left p-3 rounded-md transition-colors flex items-center gap-3"><i data-lucide="flower-2" class="w-5 h-5"></i> NDVI (MicaSense)</button>
+                                    <button onclick="changeMap('umidade')" class="map-button w-full text-left p-3 rounded-md transition-colors flex items-center gap-3"><i data-lucide="waves" class="w-5 h-5"></i> Umidade (Sentek)</button>
+                                    <button onclick="changeMap('prescricao')" class="map-button w-full text-left p-3 rounded-md transition-colors flex items-center gap-3"><i data-lucide="mouse-pointer-click" class="w-5 h-5"></i> Prescrição VRI (Valley)</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="content-sensors" class="hidden">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="bg-white p-6 rounded-lg shadow">
+                                <h3 class="text-xl font-semibold mb-4 flex items-center gap-2"><i data-lucide="station" class="text-gray-600"></i> Estação Davis Vantage Pro2</h3>
+                                <div class="space-y-3 text-lg">
+                                    <p><strong>Evapotranspiração (ETc):</strong> <span id="sensor-etc" class="font-mono float-right"></span></p>
+                                    <p><strong>Chuva (24h):</strong> <span id="sensor-chuva" class="font-mono float-right"></span></p>
+                                    <p><strong>Temp. do Ar:</strong> <span id="sensor-temp-ar" class="font-mono float-right"></span></p>
+                                    <p><strong>Umidade do Ar:</strong> <span id="sensor-umidade-ar" class="font-mono float-right"></span></p>
+                                    <p><strong>Radiação Solar:</strong> <span id="sensor-radiacao" class="font-mono float-right"></span></p>
+                                </div>
+                            </div>
+                            <div class="bg-white p-6 rounded-lg shadow">
+                                <h3 class="text-xl font-semibold mb-4 flex items-center gap-2"><i data-lucide="move-down" class="text-yellow-700"></i> Sonda Sentek Drill & Drop</h3>
+                                <p class="text-sm text-gray-500 mb-4">Perfil de umidade do solo.</p>
+                                <div id="sonda-list" class="space-y-3 text-lg">
+                                     </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </main>
+    </div>
+
+<script>
+    // --- SIMULAÇÃO DE DADOS ---
+    // Em uma aplicação real, estes dados viriam de uma API.
+    const farmData = {
+        'talhao-1': {
+            name: 'Pivô 01',
+            cultura: 'Soja - Estágio R5.2',
+            status: 'ok',
+            statusText: 'Operação Normal',
+            metrics: { umidade: '34%', temperatura: '26°C', nutrientes: 'Ótimo', previsao: 'Sol' },
+            acoes: [
+                { title: 'Monitoramento Contínuo', priority: 'low', details: 'Nenhuma ação imediata necessária. Manter o monitoramento padrão dos sensores e imagens.' }
+            ],
+            maps: {
+                satelite: 'satelite.png',
+                ndvi: 'ndvi.png',
+                umidade: 'umidade.png',
+                prescricao: 'vri.png'
+            },
+            sensors: {
+                etc: '3.8 mm/dia', chuva: '0.0 mm', tempAr: '27.1 °C', umidadeAr: '68%', radiacao: '720 W/m²',
+                sonda: { '10 cm': { val: '35%', status: 'Ideal' }, '30 cm': { val: '32%', status: 'Ideal' }, '60 cm': { val: '28%', status: 'Ideal' }, '90 cm': { val: '25%', status: 'Ideal' } }
+            }
+        },
+        'talhao-2': {
+            name: 'Pivô 02',
+            cultura: 'Milho - Pendoamento',
+            status: 'alerta',
+            statusText: 'Alerta de Umidade',
+            metrics: { umidade: '22%', temperatura: '29°C', nutrientes: 'Bom', previsao: 'Sol' },
+            acoes: [
+                { title: 'Agendar Irrigação', priority: 'high', details: 'Nível de umidade nas raízes (60cm) está baixo. Aplicar lâmina de 15mm via pivô central conforme mapa de prescrição.' },
+                { title: 'Voo de Drone Recomendado', priority: 'medium', details: 'Realizar voo com câmera multiespectral para confirmar se o estresse hídrico está afetando o vigor da planta.' }
+            ],
+            maps: {
+                satelite: 'satelite.png',
+                ndvi: 'ndvi.png',
+                umidade: 'umidade.png',
+                prescricao: 'vri.png'
+            },
+            sensors: {
+                etc: '4.5 mm/dia', chuva: '0.0 mm', tempAr: '29.3 °C', umidadeAr: '61%', radiacao: '810 W/m²',
+                sonda: { '10 cm': { val: '28%', status: 'Ideal' }, '30 cm': { val: '25%', status: 'Atenção' }, '60 cm': { val: '21%', status: 'Seco' }, '90 cm': { val: '18%', status: 'Crítico' } }
+            }
+        },
+         'talhao-3': {
+            name: 'Sequeiro 01',
+            cultura: 'Algodão - Florescimento',
+            status: 'critico',
+            statusText: 'Deficiência Nutricional',
+            metrics: { umidade: '28%', temperatura: '27°C', nutrientes: 'Baixo (N)', previsao: 'Nublado' },
+            acoes: [
+                { title: 'Aplicação de Nitrogênio', priority: 'high', details: 'NDVI e análise de solo indicam deficiência de Nitrogênio. Aplicar fertilizante em taxa variável.' },
+                { title: 'Análise Foliar', priority: 'medium', details: 'Coletar amostras de folhas na área afetada para confirmar a deficiência nutricional em laboratório.' }
+            ],
+            maps: {
+                satelite: 'satelite.png',
+                ndvi: 'ndvi.png',
+                umidade: 'umidade.png',
+                prescricao: 'vri.png'
+            },
+            sensors: {
+                etc: '3.1 mm/dia', chuva: '1.2 mm', tempAr: '26.5 °C', umidadeAr: '75%', radiacao: '550 W/m²',
+                sonda: { '10 cm': { val: '30%', status: 'Ideal' }, '30 cm': { val: '28%', status: 'Ideal' }, '60 cm': { val: '26%', status: 'Ideal' }, '90 cm': { val: '24%', status: 'Ideal' } }
+            }
+        },
+    };
+
+    // --- ELEMENTOS DO DOM ---
+    const talhaoList = document.getElementById('talhao-list');
+    const initialView = document.getElementById('initial-view');
+    const detailedView = document.getElementById('detailed-view');
+    let activeTalhaoKey = null;
+
+    // --- FUNÇÕES ---
+
+    // Popula a barra lateral com os setores da fazenda
+    function populateSidebar() {
+        Object.keys(farmData).forEach(key => {
+            const talhao = farmData[key];
+            const item = document.createElement('div');
+            item.className = 'talhao-item p-3 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors flex justify-between items-center';
+            item.id = key;
+            item.onclick = () => selectTalhao(key);
+            
+            let statusColorClass = '';
+            if(talhao.status === 'ok') statusColorClass = 'bg-green-500';
+            else if(talhao.status === 'alerta') statusColorClass = 'bg-yellow-400';
+            else if(talhao.status === 'critico') statusColorClass = 'bg-red-500';
+
+            item.innerHTML = `
+                <div>
+                    <p class="font-semibold">${talhao.name}</p>
+                    <p class="text-sm text-gray-500">${talhao.cultura}</p>
+                </div>
+                <span class="w-3 h-3 rounded-full ${statusColorClass} flex-shrink-0"></span>
+            `;
+            talhaoList.appendChild(item);
+        });
+    }
+    
+    // Seleciona um talhão e exibe seus dados
+    function selectTalhao(key) {
+        activeTalhaoKey = key;
+        const data = farmData[key];
+        
+        // Mostra a visão detalhada e esconde a inicial
+        initialView.classList.add('hidden');
+        detailedView.classList.remove('hidden');
+
+        // Atualiza estado ativo na barra lateral
+        document.querySelectorAll('.talhao-item').forEach(item => item.classList.remove('active'));
+        document.getElementById(key).classList.add('active');
+
+        // Popula o cabeçalho
+        document.getElementById('talhao-title').textContent = data.name;
+        document.getElementById('talhao-cultura').textContent = data.cultura;
+        
+        // Popula o status
+        const statusDiv = document.getElementById('talhao-status');
+        document.getElementById('talhao-status-text').textContent = data.statusText;
+        statusDiv.className = 'px-4 py-2 rounded-full text-white font-semibold text-sm flex items-center gap-2'; // Reseta classes
+        if(data.status === 'ok') statusDiv.classList.add('bg-green-600');
+        if(data.status === 'alerta') statusDiv.classList.add('bg-yellow-500');
+        if(data.status === 'critico') statusDiv.classList.add('bg-red-600');
+
+        // Popula as métricas
+        document.getElementById('metric-umidade').textContent = data.metrics.umidade;
+        document.getElementById('metric-temperatura').textContent = data.metrics.temperatura;
+        document.getElementById('metric-nutrientes').textContent = data.metrics.nutrientes;
+        document.getElementById('metric-previsao').textContent = data.metrics.previsao;
+
+        // Popula as ações recomendadas
+        const acoesList = document.getElementById('acoes-list');
+        acoesList.innerHTML = ''; // Limpa ações anteriores
+        if (!data.acoes || data.acoes.length === 0) {
+            acoesList.innerHTML = `<p class="text-gray-500">Nenhuma ação pendente.</p>`;
+        } else {
+            data.acoes.forEach(acao => {
+                let priorityClass = '';
+                if (acao.priority === 'low') priorityClass = 'border-blue-400';
+                if (acao.priority === 'medium') priorityClass = 'border-yellow-400';
+                if (acao.priority === 'high') priorityClass = 'border-red-500';
+                
+                const acaoItem = document.createElement('div');
+                acaoItem.className = `p-4 bg-gray-50 rounded-md border-l-4 ${priorityClass}`;
+                acaoItem.innerHTML = `
+                    <p class="font-semibold">${acao.title}</p>
+                    <p class="text-sm text-gray-600 mt-1">${acao.details}</p>
+                `;
+                acoesList.appendChild(acaoItem);
+            });
+        }
+        
+        // Popula dados dos sensores
+        document.getElementById('sensor-etc').textContent = data.sensors.etc;
+        document.getElementById('sensor-chuva').textContent = data.sensors.chuva;
+        document.getElementById('sensor-temp-ar').textContent = data.sensors.tempAr;
+        document.getElementById('sensor-umidade-ar').textContent = data.sensors.umidadeAr;
+        document.getElementById('sensor-radiacao').textContent = data.sensors.radiacao;
+
+        const sondaList = document.getElementById('sonda-list');
+        sondaList.innerHTML = '';
+        Object.keys(data.sensors.sonda).forEach(depth => {
+            const sondaData = data.sensors.sonda[depth];
+            let statusColorClass = 'text-gray-500';
+            if(sondaData.status === 'Ideal') statusColorClass = 'text-green-600';
+            if(sondaData.status === 'Atenção') statusColorClass = 'text-yellow-500';
+            if(sondaData.status === 'Seco' || sondaData.status === 'Crítico') statusColorClass = 'text-red-600';
+
+            const sondaItem = document.createElement('p');
+            sondaItem.innerHTML = `
+                <strong>${depth}:</strong> 
+                <span class="font-mono float-right">
+                    ${sondaData.val} 
+                    <span class="font-sans text-sm font-semibold ${statusColorClass}">(${sondaData.status})</span>
+                </span>
+            `;
+            sondaList.appendChild(sondaItem);
+        });
+
+        // Define mapa e aba iniciais
+        changeMap('satelite');
+        changeTab('overview');
+    }
+
+    // Altera a aba ativa
+    function changeTab(tabName) {
+        // Esconde todos os conteúdos
+        ['overview', 'maps', 'sensors'].forEach(id => document.getElementById(`content-${id}`).classList.add('hidden'));
+        
+        // Desativa todos os botões de aba
+        document.querySelectorAll('.tab-button').forEach(button => {
+            button.classList.remove('border-green-600', 'text-green-700');
+            button.classList.add('border-transparent', 'text-gray-500', 'hover:text-gray-700');
+        });
+        
+        // Mostra o conteúdo selecionado e ativa o botão
+        document.getElementById(`content-${tabName}`).classList.remove('hidden');
+        const activeButton = document.getElementById(`tab-${tabName}`);
+        activeButton.classList.add('border-green-600', 'text-green-700');
+        activeButton.classList.remove('border-transparent', 'text-gray-500', 'hover:text-gray-700');
+    }
+
+    // Altera a visualização do mapa
+    function changeMap(mapType) {
+        if (!activeTalhaoKey) return;
+        
+        const data = farmData[activeTalhaoKey];
+        document.getElementById('map-image').src = data.maps[mapType];
+        
+        const titles = {
+            satelite: 'Mapa de Satélite (Planet)',
+            ndvi: 'Mapa de Vigor - NDVI (MicaSense)',
+            umidade: 'Mapa de Umidade do Solo (Sentek)',
+            prescricao: 'Mapa de Prescrição (Valley VRI)'
+        };
+        document.getElementById('map-title').textContent = titles[mapType];
+
+        // Atualiza estado ativo nos botões de mapa
+        document.querySelectorAll('.map-button').forEach(button => button.classList.remove('bg-gray-200', 'font-semibold'));
+        document.querySelector(`.map-button[onclick="changeMap('${mapType}')"]`).classList.add('bg-gray-200', 'font-semibold');
+    }
+
+    // Simula atualizações de dados em tempo real
+    function updateRealTimeData() {
+        const now = new Date();
+        document.getElementById('last-updated').textContent = `Última atualização: ${now.toLocaleTimeString('pt-BR')}`;
+        
+        if (!activeTalhaoKey) return;
+
+        // Simula pequena variação na temperatura do ar
+        const tempArSpan = document.getElementById('sensor-temp-ar');
+        let tempAr = parseFloat(tempArSpan.textContent);
+        tempAr += (Math.random() - 0.5) * 0.2;
+        tempArSpan.textContent = `${tempAr.toFixed(1)} °C`;
+    }
+    
+    // Atualiza a data no cabeçalho
+    function setCurrentDate() {
+        const now = new Date();
+        const options = { year: 'numeric', month: 'long', day: 'numeric' };
+        document.getElementById('current-date').textContent = now.toLocaleDateString('pt-BR', options);
+    }
+
+    // --- INICIALIZAÇÃO ---
+    window.onload = () => {
+        populateSidebar();
+        lucide.createIcons(); // Renderiza os ícones
+        setCurrentDate();
+        updateRealTimeData(); // Chama uma vez para popular a hora inicial
+        setInterval(updateRealTimeData, 5000); // Atualiza dados a cada 5 segundos
+    };
+
+</script>
+</body>
+</html>
