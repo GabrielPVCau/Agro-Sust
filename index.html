@@ -155,10 +155,10 @@
                                 <h3 class="text-xl font-semibold mb-2">Camadas de Dados</h3>
                                 <p class="text-sm text-gray-500 mb-4">Selecione uma camada para visualizar.</p>
                                 <div id="map-buttons" class="space-y-2">
-                                    <button onclick="changeMap('satelite')" class="map-button w-full text-left p-3 rounded-md transition-colors flex items-center gap-3"><i data-lucide="satellite" class="w-5 h-5"></i> Satélite (Planet)</button>
-                                    <button onclick="changeMap('ndvi')" class="map-button w-full text-left p-3 rounded-md transition-colors flex items-center gap-3"><i data-lucide="flower-2" class="w-5 h-5"></i> NDVI (MicaSense)</button>
-                                    <button onclick="changeMap('umidade')" class="map-button w-full text-left p-3 rounded-md transition-colors flex items-center gap-3"><i data-lucide="waves" class="w-5 h-5"></i> Umidade (Sentek)</button>
-                                    <button onclick="changeMap('prescricao')" class="map-button w-full text-left p-3 rounded-md transition-colors flex items-center gap-3"><i data-lucide="mouse-pointer-click" class="w-5 h-5"></i> Prescrição VRI (Valley)</button>
+                                    <button onclick="changeMap('satelite')" class="map-button w-full text-left p-3 rounded-md transition-colors flex items-center gap-3"><i data-lucide="satellite" class="w-5 h-5"></i> Imagem de Satélite</button>
+                                    <button onclick="changeMap('ndvi')" class="map-button w-full text-left p-3 rounded-md transition-colors flex items-center gap-3"><i data-lucide="flower-2" class="w-5 h-5"></i> Vigor da Planta (NDVI)</button>
+                                    <button onclick="changeMap('umidade')" class="map-button w-full text-left p-3 rounded-md transition-colors flex items-center gap-3"><i data-lucide="waves" class="w-5 h-5"></i> Umidade do Solo</button>
+                                    <button onclick="changeMap('prescricao')" class="map-button w-full text-left p-3 rounded-md transition-colors flex items-center gap-3"><i data-lucide="mouse-pointer-click" class="w-5 h-5"></i> Aplicação em Taxa Variável</button>
                                 </div>
                             </div>
                         </div>
@@ -167,7 +167,7 @@
                     <div id="content-sensors" class="hidden">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div class="bg-white p-6 rounded-lg shadow">
-                                <h3 class="text-xl font-semibold mb-4 flex items-center gap-2"><i data-lucide="station" class="text-gray-600"></i> Estação Davis Vantage Pro2</h3>
+                                <h3 class="text-xl font-semibold mb-4 flex items-center gap-2"><i data-lucide="station" class="text-gray-600"></i> Estação Meteorológica</h3>
                                 <div class="space-y-3 text-lg">
                                     <p><strong>Evapotranspiração (ETc):</strong> <span id="sensor-etc" class="font-mono float-right"></span></p>
                                     <p><strong>Chuva (24h):</strong> <span id="sensor-chuva" class="font-mono float-right"></span></p>
@@ -177,8 +177,8 @@
                                 </div>
                             </div>
                             <div class="bg-white p-6 rounded-lg shadow">
-                                <h3 class="text-xl font-semibold mb-4 flex items-center gap-2"><i data-lucide="move-down" class="text-yellow-700"></i> Sonda Sentek Drill & Drop</h3>
-                                <p class="text-sm text-gray-500 mb-4">Perfil de umidade do solo.</p>
+                                <h3 class="text-xl font-semibold mb-4 flex items-center gap-2"><i data-lucide="move-down" class="text-yellow-700"></i> Sonda de Umidade do Solo</h3>
+                                <p class="text-sm text-gray-500 mb-4">Perfil de umidade em diferentes profundidades.</p>
                                 <div id="sonda-list" class="space-y-3 text-lg">
                                      </div>
                             </div>
@@ -401,11 +401,12 @@
         const data = farmData[activeTalhaoKey];
         document.getElementById('map-image').src = data.maps[mapType];
         
+        // NOVOS TÍTULOS GENÉRICOS PARA OS MAPAS
         const titles = {
-            satelite: 'Mapa de Satélite (Planet)',
-            ndvi: 'Mapa de Vigor - NDVI (MicaSense)',
-            umidade: 'Mapa de Umidade do Solo (Sentek)',
-            prescricao: 'Mapa de Prescrição (Valley VRI)'
+            satelite: 'Mapa de Satélite',
+            ndvi: 'Mapa de Vigor da Planta (NDVI)',
+            umidade: 'Mapa de Umidade do Solo',
+            prescricao: 'Mapa de Aplicação em Taxa Variável'
         };
         document.getElementById('map-title').textContent = titles[mapType];
 
